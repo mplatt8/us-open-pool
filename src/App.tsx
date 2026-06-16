@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Accordion, ActionIcon, Alert, Center, Container, Group, Loader, Paper, Stack, Text, Title } from '@mantine/core'
-import { IconAlertTriangle, IconArrowLeft } from '@tabler/icons-react'
+import { Accordion, Alert, Center, Container, Loader, Paper, SegmentedControl, Stack, Text, Title } from '@mantine/core'
+import { IconAlertTriangle } from '@tabler/icons-react'
 import { Countdown } from './components/Countdown'
 import { LiveScoreboard } from './components/LiveScoreboard'
 import { StatusHeader } from './components/StatusHeader'
@@ -31,47 +31,53 @@ export function App() {
           </Center>
         )}
 
-        {standings && view === 'live' && (
+        {standings && (
           <>
-            <Paper radius="lg" p="md" shadow="md" style={{ background: 'linear-gradient(135deg,#0a3161,#143d77)', color: 'white' }}>
-              <Group justify="space-between" wrap="nowrap">
-                <Group gap="sm" wrap="nowrap">
-                  <ActionIcon variant="white" color="dark" radius="xl" size="lg" onClick={() => setView('pool')} aria-label="Back to pool leaderboard">
-                    <IconArrowLeft size={18} />
-                  </ActionIcon>
-                  <Stack gap={0}>
-                    <Title order={3}>U.S. Open Leaderboard</Title>
-                    <Text size="xs" style={{ opacity: 0.85 }}>{standings.tournament.detail || 'Full field · Shinnecock Hills'}</Text>
-                  </Stack>
-                </Group>
-                <Text size="xs" style={{ opacity: 0.85 }}>Your golfers are highlighted</Text>
-              </Group>
-            </Paper>
-            <LiveScoreboard rows={standings.leaderboard} t={standings.tournament} />
-          </>
-        )}
+            {view === 'pool' ? (
+              <StatusHeader standings={standings} onRefresh={refresh} />
+            ) : (
+              <Paper radius="lg" p="lg" shadow="md" style={{ background: 'linear-gradient(135deg,#0a3161,#143d77)', color: 'white' }}>
+                <Title order={2}>U.S. Open Leaderboard</Title>
+                <Text size="sm" style={{ opacity: 0.85 }}>
+                  Full field · {standings.tournament.detail || 'Shinnecock Hills'} · your golfers highlighted
+                </Text>
+              </Paper>
+            )}
 
-        {standings && view === 'pool' && (
-          <>
-            <StatusHeader standings={standings} onRefresh={refresh} onShowLive={() => setView('live')} />
+            {/* Always-visible view switch */}
+            <SegmentedControl
+              fullWidth
+              size="md"
+              radius="md"
+              value={view}
+              onChange={(v) => setView(v as 'pool' | 'live')}
+              data={[
+                { label: '🏆 Pool Leaderboard', value: 'pool' },
+                { label: '⛳ Live U.S. Open Scoreboard', value: 'live' },
+              ]}
+            />
 
-            <Countdown />
-
-            <Accordion variant="filled" chevronPosition="right" multiple defaultValue={[standings.teams[0]?.owner]}>
-              {standings.teams.map((team, i) => (
-                <TeamRow
-                  key={team.owner}
-                  team={team}
-                  position={positions[i]}
-                  t={standings.tournament}
-                  leaderTotal={standings.teams[0]?.total ?? null}
-                />
-              ))}
-            </Accordion>
-
-            <Text ta="center" size="xs" c="dimmed" mt="md">
-              Scores via ESPN · Team = lowest 4 of 6 golfers' total strokes · Missed cut = 85 strokes per day
-            </Text>
+            {view === 'pool' ? (
+              <>
+                <Countdown />
+                <Accordion variant="filled" chevronPosition="right" multiple defaultValue={[standings.teams[0]?.owner]}>
+                  {standings.teams.map((team, i) => (
+                    <TeamRow
+                      key={team.owner}
+                      team={team}
+                      position={positions[i]}
+                      t={standings.tournament}
+                      leaderTotal={standings.teams[0]?.total ?? null}
+                    />
+                  ))}
+                </Accordion>
+                <Text ta="center" size="xs" c="dimmed" mt="md">
+                  Scores via ESPN · Team = lowest 4 of 6 golfers' total strokes · Missed cut = 85 strokes per day
+                </Text>
+              </>
+            ) : (
+              <LiveScoreboard rows={standings.leaderboard} t={standings.tournament} />
+            )}
           </>
         )}
       </Stack>

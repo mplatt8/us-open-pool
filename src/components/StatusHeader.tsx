@@ -1,5 +1,5 @@
-import { ActionIcon, Badge, Button, Group, Paper, Stack, Text, Title, Tooltip } from '@mantine/core'
-import { IconRefresh, IconTrophy } from '@tabler/icons-react'
+import { ActionIcon, Badge, Group, Paper, Stack, Text, Title, Tooltip } from '@mantine/core'
+import { IconRefresh } from '@tabler/icons-react'
 import type { Standings } from '../lib/types'
 
 function roundState(s: Standings): { label: string; color: string } {
@@ -9,15 +9,7 @@ function roundState(s: Standings): { label: string; color: string } {
   return { label: `Round ${t.period} • In Progress`, color: 'teal' }
 }
 
-export function StatusHeader({
-  standings,
-  onRefresh,
-  onShowLive,
-}: {
-  standings: Standings
-  onRefresh: () => void
-  onShowLive: () => void
-}) {
+export function StatusHeader({ standings, onRefresh }: { standings: Standings; onRefresh: () => void }) {
   const rs = roundState(standings)
   const t = standings.tournament
   const updated = standings.updated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })
@@ -36,23 +28,11 @@ export function StatusHeader({
             Shinnecock Hills Golf Club · Southampton, NY
           </Text>
         </Stack>
-        <Group gap="xs" wrap="nowrap">
-          <Button
-            variant="white"
-            color="dark"
-            radius="xl"
-            size="sm"
-            leftSection={<IconTrophy size={16} />}
-            onClick={onShowLive}
-          >
-            Live Scoreboard
-          </Button>
-          <Tooltip label="Refresh now">
-            <ActionIcon variant="white" color="dark" radius="xl" size="lg" onClick={onRefresh}>
-              <IconRefresh size={18} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
+        <Tooltip label="Refresh now">
+          <ActionIcon variant="white" color="dark" radius="xl" size="lg" onClick={onRefresh}>
+            <IconRefresh size={18} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
 
       <Group mt="lg" gap="xs">
