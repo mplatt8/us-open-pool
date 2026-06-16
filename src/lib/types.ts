@@ -33,6 +33,7 @@ export interface TeamResult {
   players: PlayerScore[]
   countingIds: Set<string> // the (up to) 4 players whose strokes count
   total: number | null // sum of the best 4
+  tiebreak: number[] // [5th-lowest, 6th-lowest] strokes; Infinity if absent
 }
 
 export interface Tournament {

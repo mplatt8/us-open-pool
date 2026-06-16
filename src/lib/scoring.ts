@@ -126,14 +126,29 @@ function scorePlayer(
   return { id, name, rounds, roundsDisplay, toPar, total: counted > 0 ? total : null, status, holesThru: thru, position }
 }
 
-function pickCounting(players: PlayerScore[]): { ids: Set<string>; total: number | null } {
+function pickCounting(players: PlayerScore[]): { ids: Set<string>; total: number | null; tiebreak: number[] } {
   const scored = players.filter((p) => p.total != null).sort((a, b) => a.total! - b.total!)
-  if (scored.length === 0) return { ids: new Set(), total: null }
   const counting = scored.slice(0, COUNTING_PLAYERS)
+  // Tiebreaker: the next lowest scores after the counting four (5th, then 6th).
+  const rest = scored.slice(COUNTING_PLAYERS).map((p) => p.total!)
   return {
     ids: new Set(counting.map((p) => p.id)),
-    total: counting.reduce((a, p) => a + p.total!, 0),
+    total: counting.length ? counting.reduce((a, p) => a + p.total!, 0) : null,
+    tiebreak: [rest[0] ?? Infinity, rest[1] ?? Infinity],
   }
+}
+
+// Full ordering key: best-4 total, then 5th-lowest, then 6th-lowest.
+// Lower is better; missing values sort last.
+function rankKey(t: TeamResult): number[] {
+  return [t.total ?? Infinity, ...t.tiebreak]
+}
+
+function compareKeys(a: number[], b: number[]): number {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return a[i] - b[i]
+  }
+  return 0
 }
 
 export function computeStandings(teamsFile: TeamsFile, board: EspnScoreboard): Standings {
@@ -145,16 +160,36 @@ export function computeStandings(teamsFile: TeamsFile, board: EspnScoreboard): S
 
   const teams: TeamResult[] = teamsFile.teams.map((team) => {
     const players = team.players.map((p) => scorePlayer(p.id, p.name, byId.get(p.id), tournament))
-    const { ids, total } = pickCounting(players)
-    return { owner: team.owner, players, countingIds: ids, total }
+    const { ids, total, tiebreak } = pickCounting(players)
+    return { owner: team.owner, players, countingIds: ids, total, tiebreak }
   })
 
-  teams.sort((a, b) => {
-    if (a.total == null && b.total == null) return 0
-    if (a.total == null) return 1
-    if (b.total == null) return -1
-    return a.total - b.total
-  })
+  teams.sort((a, b) => compareKeys(rankKey(a), rankKey(b)))
 
   return { tournament, teams, updated: new Date() }
+}
+
+export interface Position {
+  label: string // "1", "T1", "T3", … — shared when teams are tied
+  medalRank: number | null // 1-3 only when that position is uniquely held
+}
+
+// Standard competition ranking (1-2-2-4). Teams with equal totals share a
+// position shown with a "T" prefix. Before anyone has a score every team is
+// null and therefore tied (all "T1").
+export function computePositions(teams: TeamResult[]): Position[] {
+  // Teams share a position only when their best-4 total AND both tiebreakers
+  // match — the 5th/6th-lowest tiebreaker separates otherwise-equal teams.
+  const sameRank = (a: TeamResult, b: TeamResult) => compareKeys(rankKey(a), rankKey(b)) === 0
+
+  return teams.map((team, i) => {
+    let first = i
+    while (first > 0 && sameRank(teams[first - 1], team)) first--
+    const rank = first + 1
+    const tied =
+      (i > 0 && sameRank(teams[i - 1], team)) ||
+      (i < teams.length - 1 && sameRank(teams[i + 1], team))
+    const medalRank = !tied && rank <= 3 && team.total != null ? rank : null
+    return { label: (tied ? 'T' : '') + rank, medalRank }
+  })
 }

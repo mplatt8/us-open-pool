@@ -3,10 +3,12 @@ import { IconAlertTriangle } from '@tabler/icons-react'
 import { Countdown } from './components/Countdown'
 import { StatusHeader } from './components/StatusHeader'
 import { TeamRow } from './components/TeamRow'
+import { computePositions } from './lib/scoring'
 import { useStandings } from './lib/useStandings'
 
 export function App() {
   const { standings, error, loading, refresh } = useStandings()
+  const positions = standings ? computePositions(standings.teams) : []
 
   return (
     <Container size="md" py="xl">
@@ -36,7 +38,7 @@ export function App() {
               <TeamRow
                 key={team.owner}
                 team={team}
-                rank={i + 1}
+                position={positions[i]}
                 t={standings.tournament}
                 leaderTotal={standings.teams[0]?.total ?? null}
               />

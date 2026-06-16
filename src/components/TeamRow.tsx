@@ -1,5 +1,6 @@
 import { Accordion, Badge, Box, Group, Stack, Table, Text } from '@mantine/core'
 import { IconCheck } from '@tabler/icons-react'
+import type { Position } from '../lib/scoring'
 import type { PlayerScore, TeamResult, Tournament } from '../lib/types'
 
 const RANK_COLORS = ['#caa42a', '#9aa3ad', '#b07c47'] // gold / silver / bronze
@@ -84,8 +85,8 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
   )
 }
 
-export function TeamRow({ team, rank, t, leaderTotal }: { team: TeamResult; rank: number; t: Tournament; leaderTotal: number | null }) {
-  const rankColor = rank <= 3 ? RANK_COLORS[rank - 1] : '#e9edf2'
+export function TeamRow({ team, position, t, leaderTotal }: { team: TeamResult; position: Position; t: Tournament; leaderTotal: number | null }) {
+  const medal = position.medalRank != null
   const gap = team.total != null && leaderTotal != null ? team.total - leaderTotal : null
 
   return (
@@ -97,20 +98,21 @@ export function TeamRow({ team, rank, t, leaderTotal }: { team: TeamResult; rank
         <Group justify="space-between" wrap="nowrap" pr="md">
           <Group gap="md" wrap="nowrap">
             <Box
-              w={34}
-              h={34}
+              w={36}
+              h={36}
               style={{
                 borderRadius: '50%',
-                background: rank <= 3 ? rankColor : '#eef2f7',
-                color: rank <= 3 ? 'white' : '#0a3161',
+                background: medal ? RANK_COLORS[position.medalRank! - 1] : '#eef2f7',
+                color: medal ? 'white' : '#0a3161',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 800,
+                fontSize: position.label.length > 2 ? 12 : 14,
                 flexShrink: 0,
               }}
             >
-              {rank}
+              {position.label}
             </Box>
             <Stack gap={0}>
               <Text fw={700}>{team.owner}</Text>
