@@ -1,69 +1,52 @@
 import { Box, Group, Stack, Table, Text } from '@mantine/core'
+import { parSum, SHINNECOCK, TOTAL_PAR } from '../lib/course'
 import type { HoleScore } from '../lib/types'
 
-// golf convention: under par is "red", over par darker; birdies circled, bogeys squared
-function holeStyle(rel: number): React.CSSProperties {
-  if (rel <= -2) return { background: '#f1c40f', color: '#3b2f00', borderRadius: '50%', fontWeight: 800 } // eagle+
-  if (rel === -1) return { background: '#2f9e44', color: 'white', borderRadius: '50%', fontWeight: 700 } // birdie
-  if (rel === 1) return { background: '#ffe3e3', color: '#c92a2a', borderRadius: 4, fontWeight: 700 } // bogey
-  if (rel >= 2) return { background: '#e03131', color: 'white', borderRadius: 4, fontWeight: 800 } // double+
-  return { color: '#495057' } // par
+// golf convention: birdies circled (green), bogeys squared (red), eagles gold
+function scoreStyle(rel: number): React.CSSProperties {
+  if (rel <= -2) return { background: '#f1c40f', color: '#3b2f00', borderRadius: '50%', fontWeight: 800 }
+  if (rel === -1) return { background: '#2f9e44', color: 'white', borderRadius: '50%', fontWeight: 700 }
+  if (rel === 1) return { background: '#ffe3e3', color: '#c92a2a', borderRadius: 4, fontWeight: 700 }
+  if (rel >= 2) return { background: '#e03131', color: 'white', borderRadius: 4, fontWeight: 800 }
+  return { color: '#495057' }
 }
 
-function Cell({ children, w = 26 }: { children: React.ReactNode; w?: number }) {
-  return (
-    <Table.Td p={4} style={{ textAlign: 'center', minWidth: w }}>
-      {children}
-    </Table.Td>
-  )
+function Cell({ children }: { children: React.ReactNode }) {
+  return <Table.Td p={3} style={{ textAlign: 'center', minWidth: 24 }}>{children}</Table.Td>
 }
 
-function nineSum(holes: HoleScore[], lo: number, hi: number): number | null {
-  const seg = holes.filter((h) => h.hole >= lo && h.hole <= hi)
-  return seg.length === hi - lo + 1 ? seg.reduce((a, h) => a + h.strokes, 0) : null
-}
+function Half({ lo, hi, label, byHole }: { lo: number; hi: number; label: string; byHole: Map<number, HoleScore> }) {
+  const holes = SHINNECOCK.filter((h) => h.hole >= lo && h.hole <= hi)
+  const played = holes.filter((h) => byHole.has(h.hole))
+  const scoreSum = played.reduce((a, h) => a + byHole.get(h.hole)!.strokes, 0)
 
-function Half({ holes, lo, hi, label }: { holes: HoleScore[]; lo: number; hi: number; label: string }) {
-  const cols = Array.from({ length: hi - lo + 1 }, (_, k) => lo + k)
-  const byHole = new Map(holes.map((h) => [h.hole, h]))
-  const sum = nineSum(holes, lo, hi)
   return (
     <Table withTableBorder withColumnBorders verticalSpacing={2} horizontalSpacing={2} style={{ fontSize: 12 }}>
       <Table.Thead>
         <Table.Tr style={{ background: '#0a3161' }}>
-          {cols.map((h) => (
-            <Cell key={h}>
-              <Text size="xs" fw={700} c="white">{h}</Text>
-            </Cell>
+          <Cell><Text size="xs" fw={700} c="white">Hole</Text></Cell>
+          {holes.map((h) => (
+            <Cell key={h.hole}><Text size="xs" fw={700} c="white">{h.hole}</Text></Cell>
           ))}
           <Cell><Text size="xs" fw={800} c="white">{label}</Text></Cell>
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        <Table.Tr>
-          {cols.map((h) => (
-            <Cell key={h}>
-              <Text size="xs" c="dimmed">{byHole.get(h)?.par ?? ''}</Text>
-            </Cell>
+        <Table.Tr style={{ background: '#eef2f7' }}>
+          <Cell><Text size="xs" fw={700} c="dimmed">Par</Text></Cell>
+          {holes.map((h) => (
+            <Cell key={h.hole}><Text size="xs" fw={600} c="dimmed">{h.par}</Text></Cell>
           ))}
-          <Cell><Text size="xs" c="dimmed">{/* par sum omitted */}</Text></Cell>
+          <Cell><Text size="xs" fw={800} c="dimmed">{parSum(lo, hi)}</Text></Cell>
         </Table.Tr>
         <Table.Tr>
-          {cols.map((h) => {
-            const hs = byHole.get(h)
+          <Cell><Text size="xs" fw={700}>Score</Text></Cell>
+          {holes.map((h) => {
+            const hs = byHole.get(h.hole)
             return (
-              <Cell key={h}>
+              <Cell key={h.hole}>
                 {hs ? (
-                  <Box
-                    style={{
-                      ...holeStyle(hs.rel),
-                      width: 20,
-                      height: 20,
-                      lineHeight: '20px',
-                      margin: '0 auto',
-                      fontSize: 12,
-                    }}
-                  >
+                  <Box style={{ ...scoreStyle(hs.strokes - h.par), width: 20, height: 20, lineHeight: '20px', margin: '0 auto' }}>
                     {hs.strokes}
                   </Box>
                 ) : (
@@ -72,7 +55,7 @@ function Half({ holes, lo, hi, label }: { holes: HoleScore[]; lo: number; hi: nu
               </Cell>
             )
           })}
-          <Cell><Text size="xs" fw={800}>{sum ?? ''}</Text></Cell>
+          <Cell><Text size="xs" fw={800}>{played.length ? scoreSum : ''}</Text></Cell>
         </Table.Tr>
       </Table.Tbody>
     </Table>
@@ -80,20 +63,23 @@ function Half({ holes, lo, hi, label }: { holes: HoleScore[]; lo: number; hi: nu
 }
 
 export function Scorecard({ holes }: { holes: HoleScore[] }) {
-  if (holes.length === 0) {
-    return <Text size="xs" c="dimmed" py="xs">No scorecard yet — this round hasn't started.</Text>
-  }
+  const byHole = new Map(holes.map((h) => [h.hole, h]))
   const total = holes.reduce((a, h) => a + h.strokes, 0)
+
   return (
     <Stack gap={8} py={6}>
       <Table.ScrollContainer minWidth={300} type="native">
         <Group gap="lg" wrap="nowrap" align="flex-start">
-          <Half holes={holes} lo={1} hi={9} label="OUT" />
-          <Half holes={holes} lo={10} hi={18} label="IN" />
+          <Half lo={1} hi={9} label="OUT" byHole={byHole} />
+          <Half lo={10} hi={18} label="IN" byHole={byHole} />
         </Group>
       </Table.ScrollContainer>
-      <Group gap="md">
-        <Text size="xs" fw={700}>Round total: {total} ({holes.length} hole{holes.length === 1 ? '' : 's'})</Text>
+      <Group gap="md" justify="space-between">
+        <Text size="xs" fw={700}>
+          {holes.length === 0
+            ? `Par ${TOTAL_PAR} · hasn't teed off yet`
+            : `Through ${holes.length} hole${holes.length === 1 ? '' : 's'} · ${total} strokes`}
+        </Text>
         <Group gap={6}>
           <Box style={{ width: 12, height: 12, borderRadius: '50%', background: '#2f9e44' }} />
           <Text size="xs" c="dimmed">birdie</Text>

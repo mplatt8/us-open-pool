@@ -33,30 +33,8 @@ function RoundCell({
 }) {
   const disp = p.roundsDisplay[i]
   const detail = p.roundDetails[i]
-  const hasCard = detail.holes.length > 0
 
-  // Round played (or in progress): clickable to open the scorecard.
-  if (hasCard) {
-    return (
-      <Table.Td style={num} p={4}>
-        <UnstyledButton
-          onClick={onToggle}
-          style={{
-            padding: '2px 8px',
-            borderRadius: 6,
-            background: open ? '#0a3161' : 'transparent',
-            color: open ? 'white' : '#0a3161',
-            fontWeight: 600,
-            fontSize: 14,
-            borderBottom: open ? 'none' : '1px dotted #adb5bd',
-          }}
-        >
-          {disp}
-        </UnstyledButton>
-      </Table.Td>
-    )
-  }
-  // Missed-cut penalty day.
+  // Missed-cut penalty day — no real round to show.
   if (disp === '85') {
     return (
       <Table.Td style={num}>
@@ -64,14 +42,29 @@ function RoundCell({
       </Table.Td>
     )
   }
-  // Not played yet: show the tee time if it's been posted.
+
+  // Everything else opens a scorecard — the played holes if any, otherwise a
+  // blank Shinnecock card with the pars. The cell label is the score if the
+  // round is underway, else the tee time, else a dash.
+  const label = detail.holes.length > 0 ? disp : detail.teeTime ?? '—'
+  const muted = detail.holes.length === 0
+
   return (
-    <Table.Td style={num}>
-      {detail.teeTime ? (
-        <Text size="xs" c="dimmed">{detail.teeTime}</Text>
-      ) : (
-        <Text size="sm" c="dimmed">—</Text>
-      )}
+    <Table.Td style={num} p={4}>
+      <UnstyledButton
+        onClick={onToggle}
+        style={{
+          padding: '2px 8px',
+          borderRadius: 6,
+          background: open ? '#0a3161' : 'transparent',
+          color: open ? 'white' : muted ? '#868e96' : '#0a3161',
+          fontWeight: muted ? 400 : 600,
+          fontSize: muted ? 12 : 14,
+          borderBottom: open ? 'none' : '1px dotted #adb5bd',
+        }}
+      >
+        {label}
+      </UnstyledButton>
     </Table.Td>
   )
 }
