@@ -125,13 +125,13 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
                   </Table.Td>
                 </Table.Tr>
 
-                {/* Scorecard appears directly under this golfer. It is pinned to
-                    the left and width-capped to the screen so its own horizontal
-                    scroll doesn't drag the summary table. */}
+                {/* Scorecard appears directly under this golfer, filling the
+                    full width of the dropdown. It has its own scroll container
+                    so on mobile the holes scroll without dragging the table. */}
                 {openRound != null && (
                   <Table.Tr>
-                    <Table.Td colSpan={6} p={0} style={{ position: 'sticky', left: 0, background: '#f8fafc' }}>
-                      <Box style={{ width: 'min(calc(100vw - 48px), 620px)', padding: '8px 12px' }}>
+                    <Table.Td colSpan={6} p={0} style={{ background: '#f8fafc' }}>
+                      <Box style={{ width: '100%', padding: '8px 12px' }}>
                         <Group justify="space-between" mb={4}>
                           <Text size="xs" fw={700} c="dimmed">
                             {p.name} · Round {openRound + 1} scorecard

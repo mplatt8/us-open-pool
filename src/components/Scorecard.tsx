@@ -12,7 +12,7 @@ function scoreStyle(rel: number): React.CSSProperties {
 }
 
 function Cell({ children }: { children: React.ReactNode }) {
-  return <Table.Td p={3} style={{ textAlign: 'center', minWidth: 24 }}>{children}</Table.Td>
+  return <Table.Td p={3} style={{ textAlign: 'center', minWidth: 24, whiteSpace: 'nowrap' }}>{children}</Table.Td>
 }
 
 function Half({ lo, hi, label, byHole }: { lo: number; hi: number; label: string; byHole: Map<number, HoleScore> }) {
@@ -21,7 +21,7 @@ function Half({ lo, hi, label, byHole }: { lo: number; hi: number; label: string
   const scoreSum = played.reduce((a, h) => a + byHole.get(h.hole)!.strokes, 0)
 
   return (
-    <Table withTableBorder withColumnBorders verticalSpacing={2} horizontalSpacing={2} style={{ fontSize: 12 }}>
+    <Table withTableBorder withColumnBorders verticalSpacing={2} horizontalSpacing={2} style={{ fontSize: 12, width: '100%' }}>
       <Table.Thead>
         <Table.Tr style={{ background: '#0a3161' }}>
           <Cell><Text size="xs" fw={700} c="white">Hole</Text></Cell>
@@ -68,8 +68,8 @@ export function Scorecard({ holes }: { holes: HoleScore[] }) {
 
   return (
     <Stack gap={8} py={6}>
-      <Table.ScrollContainer minWidth={300} type="native">
-        <Group gap="lg" wrap="nowrap" align="flex-start">
+      <Table.ScrollContainer minWidth={640} type="native">
+        <Group grow gap="md" wrap="nowrap" align="flex-start">
           <Half lo={1} hi={9} label="OUT" byHole={byHole} />
           <Half lo={10} hi={18} label="IN" byHole={byHole} />
         </Group>
