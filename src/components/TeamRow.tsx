@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Accordion, Badge, Box, Group, Stack, Table, Text, UnstyledButton } from '@mantine/core'
 import { IconCheck } from '@tabler/icons-react'
 import type { Position } from '../lib/scoring'
@@ -74,30 +74,26 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
   // Show counting players first, then the rest, each in ascending strokes.
   const sorted = [...team.players].sort((a, b) => (a.total ?? Infinity) - (b.total ?? Infinity))
 
-  const openPlayer = openKey ? sorted.find((p) => p.id === openKey.split(':')[0]) : undefined
-  const openRoundIdx = openKey ? Number(openKey.split(':')[1]) : null
-
   return (
-    <Stack gap="sm">
-      <Table.ScrollContainer minWidth={460} type="native">
-        <Table verticalSpacing="xs" horizontalSpacing="md">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th style={{ whiteSpace: 'nowrap' }}>Golfer</Table.Th>
-              <Table.Th style={num}>R1</Table.Th>
-              <Table.Th style={num}>R2</Table.Th>
-              <Table.Th style={num}>R3</Table.Th>
-              <Table.Th style={num}>R4</Table.Th>
-              <Table.Th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Total</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {sorted.map((p) => {
-              const counts = team.countingIds.has(p.id)
-              const openRound = openKey && openKey.startsWith(`${p.id}:`) ? Number(openKey.split(':')[1]) : null
-              return (
+    <Table.ScrollContainer minWidth={460} type="native">
+      <Table verticalSpacing="xs" horizontalSpacing="md">
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th style={{ whiteSpace: 'nowrap' }}>Golfer</Table.Th>
+            <Table.Th style={num}>R1</Table.Th>
+            <Table.Th style={num}>R2</Table.Th>
+            <Table.Th style={num}>R3</Table.Th>
+            <Table.Th style={num}>R4</Table.Th>
+            <Table.Th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Total</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {sorted.map((p) => {
+            const counts = team.countingIds.has(p.id)
+            const openRound = openKey && openKey.startsWith(`${p.id}:`) ? Number(openKey.split(':')[1]) : null
+            return (
+              <Fragment key={p.id}>
                 <Table.Tr
-                  key={p.id}
                   style={{
                     background: counts ? 'rgba(34,139,76,0.08)' : undefined,
                     opacity: counts || p.total == null ? 1 : 0.6,
@@ -128,27 +124,33 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
                     <Text fw={700} size="sm">{p.total ?? '—'}</Text>
                   </Table.Td>
                 </Table.Tr>
-              )
-            })}
-          </Table.Tbody>
-        </Table>
-      </Table.ScrollContainer>
 
-      {/* Scorecard lives OUTSIDE the player table so it scrolls independently */}
-      {openPlayer && openRoundIdx != null && (
-        <Box style={{ background: '#f8fafc', borderRadius: 10, padding: '8px 12px' }}>
-          <Group justify="space-between" mb={4}>
-            <Text size="xs" fw={700} c="dimmed">
-              {openPlayer.name} · Round {openRoundIdx + 1} scorecard
-            </Text>
-            <UnstyledButton onClick={() => setOpenKey(null)}>
-              <Text size="xs" c="blue" fw={600}>Close ✕</Text>
-            </UnstyledButton>
-          </Group>
-          <Scorecard holes={openPlayer.roundDetails[openRoundIdx].holes} />
-        </Box>
-      )}
-    </Stack>
+                {/* Scorecard appears directly under this golfer. It is pinned to
+                    the left and width-capped to the screen so its own horizontal
+                    scroll doesn't drag the summary table. */}
+                {openRound != null && (
+                  <Table.Tr>
+                    <Table.Td colSpan={6} p={0} style={{ position: 'sticky', left: 0, background: '#f8fafc' }}>
+                      <Box style={{ width: 'min(calc(100vw - 48px), 620px)', padding: '8px 12px' }}>
+                        <Group justify="space-between" mb={4}>
+                          <Text size="xs" fw={700} c="dimmed">
+                            {p.name} · Round {openRound + 1} scorecard
+                          </Text>
+                          <UnstyledButton onClick={() => setOpenKey(null)}>
+                            <Text size="xs" c="blue" fw={600}>Close ✕</Text>
+                          </UnstyledButton>
+                        </Group>
+                        <Scorecard holes={p.roundDetails[openRound].holes} />
+                      </Box>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </Fragment>
+            )
+          })}
+        </Table.Tbody>
+      </Table>
+    </Table.ScrollContainer>
   )
 }
 
