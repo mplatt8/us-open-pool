@@ -22,16 +22,18 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
     const bv = b.total ?? Infinity
     return av - bv
   })
+  const num = { textAlign: 'center', whiteSpace: 'nowrap' } as const
   return (
+    <Table.ScrollContainer minWidth={460} type="native">
     <Table verticalSpacing="xs" horizontalSpacing="md" highlightOnHover>
       <Table.Thead>
         <Table.Tr>
-          <Table.Th>Golfer</Table.Th>
-          <Table.Th ta="center">R1</Table.Th>
-          <Table.Th ta="center">R2</Table.Th>
-          <Table.Th ta="center">R3</Table.Th>
-          <Table.Th ta="center">R4</Table.Th>
-          <Table.Th ta="right">Total</Table.Th>
+          <Table.Th style={{ whiteSpace: 'nowrap' }}>Golfer</Table.Th>
+          <Table.Th style={num}>R1</Table.Th>
+          <Table.Th style={num}>R2</Table.Th>
+          <Table.Th style={num}>R3</Table.Th>
+          <Table.Th style={num}>R4</Table.Th>
+          <Table.Th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Total</Table.Th>
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
@@ -53,7 +55,7 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
                     <Box w={16} />
                   )}
                   <Stack gap={0}>
-                    <Text fw={counts ? 700 : 500} size="sm">{p.name}</Text>
+                    <Text fw={counts ? 700 : 500} size="sm" style={{ whiteSpace: 'nowrap' }}>{p.name}</Text>
                     <Group gap={6}>
                       <PlayerStatusBadge p={p} t={t} />
                       {p.toPar !== '-' && (
@@ -64,13 +66,13 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
                 </Group>
               </Table.Td>
               {p.roundsDisplay.map((r, i) => (
-                <Table.Td key={i} ta="center">
+                <Table.Td key={i} style={num}>
                   <Text size="sm" c={r === '85' ? 'red' : undefined} fw={r === '85' ? 600 : 400}>
                     {r}
                   </Text>
                 </Table.Td>
               ))}
-              <Table.Td ta="right">
+              <Table.Td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                 <Text fw={700} size="sm">{p.total ?? '—'}</Text>
               </Table.Td>
             </Table.Tr>
@@ -78,6 +80,7 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
         })}
       </Table.Tbody>
     </Table>
+    </Table.ScrollContainer>
   )
 }
 
