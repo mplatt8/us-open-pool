@@ -37,9 +37,9 @@ export function App() {
               <StatusHeader standings={standings} onRefresh={refresh} />
             ) : (
               <Paper radius="lg" p="lg" shadow="md" style={{ background: 'linear-gradient(135deg,#0a3161,#143d77)', color: 'white' }}>
-                <Title order={2}>U.S. Open Leaderboard</Title>
+                <Title order={2}>Live Leaderboard</Title>
                 <Text size="sm" style={{ opacity: 0.85 }}>
-                  Full field · {standings.tournament.detail || 'Shinnecock Hills'} · your golfers highlighted
+                  Full field · your golfers highlighted
                 </Text>
               </Paper>
             )}
@@ -52,8 +52,8 @@ export function App() {
               value={view}
               onChange={(v) => setView(v as 'pool' | 'live')}
               data={[
-                { label: '🏆 Pool Leaderboard', value: 'pool' },
-                { label: '⛳ Live U.S. Open Scoreboard', value: 'live' },
+                { label: '🏆 Pool', value: 'pool' },
+                { label: '⛳ Live Leaderboard', value: 'live' },
               ]}
             />
 
