@@ -12,11 +12,19 @@ export interface EspnCompetitor {
   linescores?: EspnLinescore[]
 }
 
+export interface EspnHole {
+  value?: number // strokes on the hole
+  displayValue?: string
+  period?: number // hole number (1-18)
+  scoreType?: { displayValue?: string } // relative to par on the hole, e.g. "-1", "E"
+}
+
 export interface EspnLinescore {
   value?: number
   displayValue?: string
   period?: number
-  linescores?: { value?: number }[] // hole-by-hole
+  linescores?: EspnHole[] // hole-by-hole
+  statistics?: { categories?: { stats?: { displayValue?: string }[] }[] } // holds tee time
 }
 
 export interface EspnScoreboard {

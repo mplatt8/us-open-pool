@@ -16,11 +16,24 @@ export interface TeamsFile {
 
 export type PlayerStatus = 'pre' | 'active' | 'made' | 'cut' | 'notfound'
 
+export interface HoleScore {
+  hole: number // 1-18
+  strokes: number
+  par: number
+  rel: number // strokes relative to par on this hole (birdie = -1)
+}
+
+export interface RoundDetail {
+  teeTime: string | null // formatted local tee time, e.g. "7:07 AM", if published
+  holes: HoleScore[] // hole-by-hole, sorted 1-18; partial while a round is in play
+}
+
 export interface PlayerScore {
   id: string
   name: string
   rounds: (number | null)[] // 4 rounds, strokes (live/partial), null if not played
   roundsDisplay: string[] // 4 rounds, what each contributes: strokes, "85", or "—"
+  roundDetails: RoundDetail[] // 4 rounds of tee time + hole-by-hole data
   toPar: string // ESPN relative-to-par string, e.g. "-3", "E", "+5"
   total: number | null // total strokes incl. missed-cut penalties; null before they start
   status: PlayerStatus

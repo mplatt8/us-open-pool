@@ -1,7 +1,9 @@
-import { Accordion, Badge, Box, Group, Stack, Table, Text } from '@mantine/core'
+import { Fragment, useState } from 'react'
+import { Accordion, Badge, Box, Group, Stack, Table, Text, UnstyledButton } from '@mantine/core'
 import { IconCheck } from '@tabler/icons-react'
 import type { Position } from '../lib/scoring'
 import type { PlayerScore, TeamResult, Tournament } from '../lib/types'
+import { Scorecard } from './Scorecard'
 
 const RANK_COLORS = ['#caa42a', '#9aa3ad', '#b07c47'] // gold / silver / bronze
 
@@ -16,17 +18,72 @@ function PlayerStatusBadge({ p, t }: { p: PlayerScore; t: Tournament }) {
   return null
 }
 
+const num = { textAlign: 'center', whiteSpace: 'nowrap' } as const
+
+function RoundCell({
+  p,
+  i,
+  open,
+  onToggle,
+}: {
+  p: PlayerScore
+  i: number
+  open: boolean
+  onToggle: () => void
+}) {
+  const disp = p.roundsDisplay[i]
+  const detail = p.roundDetails[i]
+  const hasCard = detail.holes.length > 0
+
+  // Round played (or in progress): clickable to open the scorecard.
+  if (hasCard) {
+    return (
+      <Table.Td style={num} p={4}>
+        <UnstyledButton
+          onClick={onToggle}
+          style={{
+            padding: '2px 8px',
+            borderRadius: 6,
+            background: open ? '#0a3161' : 'transparent',
+            color: open ? 'white' : '#0a3161',
+            fontWeight: 600,
+            fontSize: 14,
+            borderBottom: open ? 'none' : '1px dotted #adb5bd',
+          }}
+        >
+          {disp}
+        </UnstyledButton>
+      </Table.Td>
+    )
+  }
+  // Missed-cut penalty day.
+  if (disp === '85') {
+    return (
+      <Table.Td style={num}>
+        <Text size="sm" c="red" fw={600}>85</Text>
+      </Table.Td>
+    )
+  }
+  // Not played yet: show the tee time if it's been posted.
+  return (
+    <Table.Td style={num}>
+      {detail.teeTime ? (
+        <Text size="xs" c="dimmed">{detail.teeTime}</Text>
+      ) : (
+        <Text size="sm" c="dimmed">—</Text>
+      )}
+    </Table.Td>
+  )
+}
+
 function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
+  const [openKey, setOpenKey] = useState<string | null>(null)
   // Show counting players first, then the rest, each in ascending strokes.
-  const sorted = [...team.players].sort((a, b) => {
-    const av = a.total ?? Infinity
-    const bv = b.total ?? Infinity
-    return av - bv
-  })
-  const num = { textAlign: 'center', whiteSpace: 'nowrap' } as const
+  const sorted = [...team.players].sort((a, b) => (a.total ?? Infinity) - (b.total ?? Infinity))
+
   return (
     <Table.ScrollContainer minWidth={460} type="native">
-    <Table verticalSpacing="xs" horizontalSpacing="md" highlightOnHover>
+    <Table verticalSpacing="xs" horizontalSpacing="md">
       <Table.Thead>
         <Table.Tr>
           <Table.Th style={{ whiteSpace: 'nowrap' }}>Golfer</Table.Th>
@@ -40,43 +97,51 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
       <Table.Tbody>
         {sorted.map((p) => {
           const counts = team.countingIds.has(p.id)
+          const openRound = openKey && openKey.startsWith(`${p.id}:`) ? Number(openKey.split(':')[1]) : null
           return (
-            <Table.Tr
-              key={p.id}
-              style={{
-                background: counts ? 'rgba(34,139,76,0.08)' : undefined,
-                opacity: counts || p.total == null ? 1 : 0.6,
-              }}
-            >
-              <Table.Td>
-                <Group gap={8} wrap="nowrap">
-                  {counts ? (
-                    <IconCheck size={16} color="#228b4c" stroke={3} />
-                  ) : (
-                    <Box w={16} />
-                  )}
-                  <Stack gap={0}>
-                    <Text fw={counts ? 700 : 500} size="sm" style={{ whiteSpace: 'nowrap' }}>{p.name}</Text>
-                    <Group gap={6}>
-                      <PlayerStatusBadge p={p} t={t} />
-                      {p.toPar !== '-' && (
-                        <Text size="xs" c="dimmed">{p.toPar} to par</Text>
-                      )}
-                    </Group>
-                  </Stack>
-                </Group>
-              </Table.Td>
-              {p.roundsDisplay.map((r, i) => (
-                <Table.Td key={i} style={num}>
-                  <Text size="sm" c={r === '85' ? 'red' : undefined} fw={r === '85' ? 600 : 400}>
-                    {r}
-                  </Text>
+            <Fragment key={p.id}>
+              <Table.Tr
+                style={{
+                  background: counts ? 'rgba(34,139,76,0.08)' : undefined,
+                  opacity: counts || p.total == null ? 1 : 0.6,
+                }}
+              >
+                <Table.Td>
+                  <Group gap={8} wrap="nowrap">
+                    {counts ? <IconCheck size={16} color="#228b4c" stroke={3} /> : <Box w={16} />}
+                    <Stack gap={0}>
+                      <Text fw={counts ? 700 : 500} size="sm" style={{ whiteSpace: 'nowrap' }}>{p.name}</Text>
+                      <Group gap={6}>
+                        <PlayerStatusBadge p={p} t={t} />
+                        {p.toPar !== '-' && <Text size="xs" c="dimmed">{p.toPar} to par</Text>}
+                      </Group>
+                    </Stack>
+                  </Group>
                 </Table.Td>
-              ))}
-              <Table.Td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                <Text fw={700} size="sm">{p.total ?? '—'}</Text>
-              </Table.Td>
-            </Table.Tr>
+                {[0, 1, 2, 3].map((i) => (
+                  <RoundCell
+                    key={i}
+                    p={p}
+                    i={i}
+                    open={openRound === i}
+                    onToggle={() => setOpenKey(openRound === i ? null : `${p.id}:${i}`)}
+                  />
+                ))}
+                <Table.Td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <Text fw={700} size="sm">{p.total ?? '—'}</Text>
+                </Table.Td>
+              </Table.Tr>
+              {openRound != null && (
+                <Table.Tr>
+                  <Table.Td colSpan={6} style={{ background: '#f8fafc' }}>
+                    <Text size="xs" fw={700} c="dimmed" mb={4}>
+                      {p.name} · Round {openRound + 1} scorecard
+                    </Text>
+                    <Scorecard holes={p.roundDetails[openRound].holes} />
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Fragment>
           )
         })}
       </Table.Tbody>

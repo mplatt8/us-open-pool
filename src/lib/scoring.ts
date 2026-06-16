@@ -1,7 +1,9 @@
 import type { EspnCompetitor, EspnLinescore, EspnScoreboard } from './espn'
 import type {
+  HoleScore,
   PlayerScore,
   PlayerStatus,
+  RoundDetail,
   Standings,
   TeamResult,
   TeamsFile,
@@ -29,6 +31,49 @@ function holesPlayed(ls: EspnLinescore | undefined): number {
     return ls.linescores.filter((h) => typeof h.value === 'number' && h.value > 0).length
   }
   return 0
+}
+
+function parseRel(s: string | undefined): number {
+  if (!s || s === 'E') return 0
+  const n = parseInt(s, 10)
+  return Number.isNaN(n) ? 0 : n
+}
+
+// ESPN stores the round's tee time as a stat whose displayValue is a date
+// string like "Thu Jun 12 07:07:00 PDT 2025". Pull out the clock time only
+// (tournament-local) and format it 12-hour; tz parsing is unreliable so skip it.
+function extractTeeTime(ls: EspnLinescore | undefined): string | null {
+  const stats = ls?.statistics?.categories?.[0]?.stats ?? []
+  for (const s of stats) {
+    const m = s.displayValue?.match(/\b(\d{1,2}):(\d{2}):\d{2}\b/)
+    if (m) {
+      let h = parseInt(m[1], 10)
+      const min = m[2]
+      const ampm = h >= 12 ? 'PM' : 'AM'
+      h = h % 12 || 12
+      return `${h}:${min} ${ampm}`
+    }
+  }
+  return null
+}
+
+function extractHoles(ls: EspnLinescore | undefined): HoleScore[] {
+  if (!ls || !Array.isArray(ls.linescores)) return []
+  return ls.linescores
+    .filter((h) => typeof h.value === 'number' && h.value > 0 && typeof h.period === 'number')
+    .map((h) => {
+      const strokes = h.value as number
+      const rel = parseRel(h.scoreType?.displayValue)
+      return { hole: h.period as number, strokes, par: strokes - rel, rel }
+    })
+    .sort((a, b) => a.hole - b.hole)
+}
+
+function buildRoundDetails(comp: EspnCompetitor): RoundDetail[] {
+  return [0, 1, 2, 3].map((i) => ({
+    teeTime: extractTeeTime(comp.linescores?.[i]),
+    holes: extractHoles(comp.linescores?.[i]),
+  }))
 }
 
 function parseTournament(board: EspnScoreboard): Tournament {
@@ -75,6 +120,7 @@ function scorePlayer(
       name,
       rounds: [null, null, null, null],
       roundsDisplay: started ? ['85', '85', '85', '85'] : [DASH, DASH, DASH, DASH],
+      roundDetails: [0, 1, 2, 3].map(() => ({ teeTime: null, holes: [] })),
       toPar: '-',
       total: started ? MISSED_CUT_PENALTY * 4 : null,
       status: 'notfound',
@@ -84,13 +130,14 @@ function scorePlayer(
   }
 
   const rounds = [0, 1, 2, 3].map((i) => roundStrokes(comp.linescores?.[i]))
+  const roundDetails = buildRoundDetails(comp)
   const [r1, r2] = rounds
   const toPar = comp.score ?? 'E'
   const position = comp.order != null ? String(comp.order) : '-'
   const thru = t.period >= 1 ? holesPlayed(comp.linescores?.[t.period - 1]) : 0
 
   if (t.state === 'pre') {
-    return { id, name, rounds, roundsDisplay: [DASH, DASH, DASH, DASH], toPar, total: null, status: 'pre', holesThru: thru, position }
+    return { id, name, rounds, roundsDisplay: [DASH, DASH, DASH, DASH], roundDetails, toPar, total: null, status: 'pre', holesThru: thru, position }
   }
 
   const madeCut = t.cutInEffect && r1 != null && r2 != null && t.cutLine != null && r1 + r2 <= t.cutLine
@@ -123,7 +170,7 @@ function scorePlayer(
     }
   }
 
-  return { id, name, rounds, roundsDisplay, toPar, total: counted > 0 ? total : null, status, holesThru: thru, position }
+  return { id, name, rounds, roundsDisplay, roundDetails, toPar, total: counted > 0 ? total : null, status, holesThru: thru, position }
 }
 
 function pickCounting(players: PlayerScore[]): { ids: Set<string>; total: number | null; tiebreak: number[] } {
