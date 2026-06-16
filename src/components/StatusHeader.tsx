@@ -1,5 +1,5 @@
-import { ActionIcon, Badge, Group, Paper, Stack, Text, Title, Tooltip } from '@mantine/core'
-import { IconRefresh } from '@tabler/icons-react'
+import { ActionIcon, Badge, Button, Group, Paper, Stack, Text, Title, Tooltip } from '@mantine/core'
+import { IconRefresh, IconTrophy } from '@tabler/icons-react'
 import type { Standings } from '../lib/types'
 
 function roundState(s: Standings): { label: string; color: string } {
@@ -9,14 +9,22 @@ function roundState(s: Standings): { label: string; color: string } {
   return { label: `Round ${t.period} • In Progress`, color: 'teal' }
 }
 
-export function StatusHeader({ standings, onRefresh }: { standings: Standings; onRefresh: () => void }) {
+export function StatusHeader({
+  standings,
+  onRefresh,
+  onShowLive,
+}: {
+  standings: Standings
+  onRefresh: () => void
+  onShowLive: () => void
+}) {
   const rs = roundState(standings)
   const t = standings.tournament
   const updated = standings.updated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })
 
   return (
     <Paper radius="lg" p="xl" style={{ background: 'linear-gradient(135deg,#0a3161,#143d77)', color: 'white' }} shadow="md">
-      <Group justify="space-between" align="flex-start" wrap="nowrap">
+      <Group justify="space-between" align="flex-start" wrap="wrap">
         <Stack gap={2}>
           <Text size="sm" fw={700} style={{ letterSpacing: 2, opacity: 0.85 }}>
             U.S. OPEN POOL · LIVE
@@ -28,11 +36,23 @@ export function StatusHeader({ standings, onRefresh }: { standings: Standings; o
             Shinnecock Hills Golf Club · Southampton, NY
           </Text>
         </Stack>
-        <Tooltip label="Refresh now">
-          <ActionIcon variant="white" color="dark" radius="xl" size="lg" onClick={onRefresh}>
-            <IconRefresh size={18} />
-          </ActionIcon>
-        </Tooltip>
+        <Group gap="xs" wrap="nowrap">
+          <Button
+            variant="white"
+            color="dark"
+            radius="xl"
+            size="sm"
+            leftSection={<IconTrophy size={16} />}
+            onClick={onShowLive}
+          >
+            Live Scoreboard
+          </Button>
+          <Tooltip label="Refresh now">
+            <ActionIcon variant="white" color="dark" radius="xl" size="lg" onClick={onRefresh}>
+              <IconRefresh size={18} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
       </Group>
 
       <Group mt="lg" gap="xs">

@@ -58,8 +58,24 @@ export interface Tournament {
   cutInEffect: boolean
 }
 
+export interface LeaderboardRow {
+  id: string
+  name: string
+  flag: string | null // country flag image url
+  owner: string | null // pool team owner, if this golfer is rostered
+  position: string // "T3", "CUT", or "" pre-tournament
+  toPar: string // overall score relative to par
+  toParNum: number | null
+  today: string | null // current round relative to par
+  thru: string // "F", "12", tee time, or "—"
+  rounds: (number | null)[] // round strokes
+  totalStrokes: number | null // actual strokes played (no pool penalties)
+  cut: boolean
+}
+
 export interface Standings {
   tournament: Tournament
   teams: TeamResult[] // sorted best (lowest) first
+  leaderboard: LeaderboardRow[] // the real tournament field, ESPN order
   updated: Date
 }

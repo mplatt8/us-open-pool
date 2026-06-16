@@ -1,6 +1,7 @@
 import type { EspnCompetitor, EspnLinescore, EspnScoreboard } from './espn'
 import type {
   HoleScore,
+  LeaderboardRow,
   PlayerScore,
   PlayerStatus,
   RoundDetail,
@@ -213,7 +214,74 @@ export function computeStandings(teamsFile: TeamsFile, board: EspnScoreboard): S
 
   teams.sort((a, b) => compareKeys(rankKey(a), rankKey(b)))
 
-  return { tournament, teams, updated: new Date() }
+  const leaderboard = computeLeaderboard(teamsFile, board, tournament)
+
+  return { tournament, teams, leaderboard, updated: new Date() }
+}
+
+function parToNum(s: string | undefined): number | null {
+  if (!s || s === '-') return null
+  if (s === 'E') return 0
+  const n = parseInt(s, 10)
+  return Number.isNaN(n) ? null : n
+}
+
+// The real tournament field, in ESPN's leaderboard order, with each rostered
+// golfer tagged by their pool owner.
+function computeLeaderboard(
+  teamsFile: TeamsFile,
+  board: EspnScoreboard,
+  t: Tournament,
+): LeaderboardRow[] {
+  const ownerById = new Map<string, string>()
+  for (const team of teamsFile.teams) for (const p of team.players) ownerById.set(p.id, team.owner)
+
+  const rows = [...board.competitors]
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+    .map((c) => {
+      const rounds = [0, 1, 2, 3].map((i) => roundStrokes(c.linescores?.[i]))
+      const played = rounds.filter((r): r is number => r != null)
+      const [r1, r2] = rounds
+      const cut =
+        t.cutInEffect && !(r1 != null && r2 != null && t.cutLine != null && r1 + r2 <= t.cutLine)
+
+      const curLs = t.period >= 1 ? c.linescores?.[t.period - 1] : undefined
+      const thruHoles = holesPlayed(curLs)
+      let thru: string
+      if (t.state === 'pre') thru = extractTeeTime(c.linescores?.[0]) ?? '—'
+      else if (cut) thru = 'CUT'
+      else if (thruHoles >= 18) thru = 'F'
+      else if (thruHoles > 0) thru = String(thruHoles)
+      else thru = extractTeeTime(curLs) ?? '—'
+
+      return {
+        id: String(c.id),
+        name: c.athlete?.displayName ?? 'Unknown',
+        flag: c.athlete?.flag?.href ?? null,
+        owner: ownerById.get(String(c.id)) ?? null,
+        position: '',
+        toPar: c.score ?? 'E',
+        toParNum: parToNum(c.score),
+        today: curLs?.displayValue && curLs.displayValue !== '-' ? curLs.displayValue : null,
+        thru,
+        rounds,
+        totalStrokes: played.length ? played.reduce((a, b) => a + b, 0) : null,
+        cut,
+      }
+    })
+
+  // Position labels: competition ranking by score among non-cut players.
+  if (t.state !== 'pre') {
+    const ranked = rows.filter((r) => !r.cut && r.toParNum != null)
+    for (const r of ranked) {
+      const rank = ranked.findIndex((x) => x.toParNum === r.toParNum) + 1
+      const tied = ranked.filter((x) => x.toParNum === r.toParNum).length > 1
+      r.position = (tied ? 'T' : '') + rank
+    }
+    for (const r of rows) if (r.cut) r.position = 'CUT'
+  }
+
+  return rows
 }
 
 export interface Position {

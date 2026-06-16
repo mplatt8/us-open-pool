@@ -8,7 +8,7 @@ export interface EspnCompetitor {
   id: string
   order?: number
   score?: string
-  athlete?: { displayName?: string }
+  athlete?: { displayName?: string; flag?: { href?: string; alt?: string } }
   linescores?: EspnLinescore[]
 }
 
