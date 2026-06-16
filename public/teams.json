@@ -1,0 +1,238 @@
+{
+  "event": "2026 U.S. Open",
+  "eventId": "401811952",
+  "teams": [
+    {
+      "owner": "Victor Troese",
+      "players": [
+        {
+          "id": "9478",
+          "name": "Scottie Scheffler"
+        },
+        {
+          "id": "9938",
+          "name": "Sam Burns"
+        },
+        {
+          "id": "7081",
+          "name": "Si Woo Kim"
+        },
+        {
+          "id": "5408",
+          "name": "Harris English"
+        },
+        {
+          "id": "11378",
+          "name": "Robert MacIntyre"
+        },
+        {
+          "id": "9484",
+          "name": "Alex Smalley"
+        }
+      ]
+    },
+    {
+      "owner": "Jason Ruben",
+      "players": [
+        {
+          "id": "10140",
+          "name": "Xander Schauffele"
+        },
+        {
+          "id": "4848",
+          "name": "Justin Thomas"
+        },
+        {
+          "id": "569",
+          "name": "Justin Rose"
+        },
+        {
+          "id": "4419142",
+          "name": "Akshay Bhatia"
+        },
+        {
+          "id": "3702",
+          "name": "Rickie Fowler"
+        },
+        {
+          "id": "5289811",
+          "name": "Mason Howell"
+        }
+      ]
+    },
+    {
+      "owner": "Seb Rabbini",
+      "players": [
+        {
+          "id": "9780",
+          "name": "Jon Rahm"
+        },
+        {
+          "id": "5553",
+          "name": "Tyrrell Hatton"
+        },
+        {
+          "id": "6007",
+          "name": "Patrick Cantlay"
+        },
+        {
+          "id": "10906",
+          "name": "Aaron Rai"
+        },
+        {
+          "id": "8961",
+          "name": "Sepp Straka"
+        },
+        {
+          "id": "10505",
+          "name": "J.T. Poston"
+        }
+      ]
+    },
+    {
+      "owner": "Marc Platt",
+      "players": [
+        {
+          "id": "4425906",
+          "name": "Cameron Young"
+        },
+        {
+          "id": "11119",
+          "name": "Wyndham Clark"
+        },
+        {
+          "id": "4690755",
+          "name": "Chris Gotterup"
+        },
+        {
+          "id": "4404992",
+          "name": "Ben Griffin"
+        },
+        {
+          "id": "5076021",
+          "name": "Ryan Gerard"
+        },
+        {
+          "id": "4348470",
+          "name": "Kristoffer Reitan"
+        }
+      ]
+    },
+    {
+      "owner": "Matthew Weinbrum",
+      "players": [
+        {
+          "id": "3470",
+          "name": "Rory McIlroy"
+        },
+        {
+          "id": "5579",
+          "name": "Patrick Reed"
+        },
+        {
+          "id": "5409",
+          "name": "Russell Henley"
+        },
+        {
+          "id": "4410932",
+          "name": "Min Woo Lee"
+        },
+        {
+          "id": "5215013",
+          "name": "Jackson Koivun"
+        },
+        {
+          "id": "9530",
+          "name": "Maverick McNealy"
+        }
+      ]
+    },
+    {
+      "owner": "Ethan Corcoran",
+      "players": [
+        {
+          "id": "9037",
+          "name": "Matt Fitzpatrick"
+        },
+        {
+          "id": "6798",
+          "name": "Brooks Koepka"
+        },
+        {
+          "id": "4364873",
+          "name": "Viktor Hovland"
+        },
+        {
+          "id": "5860",
+          "name": "Hideki Matsuyama"
+        },
+        {
+          "id": "5338",
+          "name": "Bud Cauley"
+        },
+        {
+          "id": "9843",
+          "name": "Jake Knapp"
+        }
+      ]
+    },
+    {
+      "owner": "Anthony Aquino II",
+      "players": [
+        {
+          "id": "5539",
+          "name": "Tommy Fleetwood"
+        },
+        {
+          "id": "10046",
+          "name": "Bryson DeChambeau"
+        },
+        {
+          "id": "5467",
+          "name": "Jordan Spieth"
+        },
+        {
+          "id": "10166",
+          "name": "J.J. Spaun"
+        },
+        {
+          "id": "10364",
+          "name": "Kurt Kitayama"
+        },
+        {
+          "id": "4251",
+          "name": "Ryan Fox"
+        }
+      ]
+    },
+    {
+      "owner": "Danny Morris",
+      "players": [
+        {
+          "id": "4375972",
+          "name": "Ludvig Åberg"
+        },
+        {
+          "id": "10592",
+          "name": "Collin Morikawa"
+        },
+        {
+          "id": "4587",
+          "name": "Shane Lowry"
+        },
+        {
+          "id": "11099",
+          "name": "Joaquín Niemann"
+        },
+        {
+          "id": "9126",
+          "name": "Corey Conners"
+        },
+        {
+          "id": "11382",
+          "name": "Sungjae Im"
+        }
+      ]
+    }
+  ]
+}

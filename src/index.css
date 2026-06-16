@@ -1,0 +1,11 @@
+:root {
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #0a3161 0%, #06224700 60%),
+    linear-gradient(180deg, #f4f7fb 0%, #eef2f7 100%);
+  min-height: 100vh;
+}
