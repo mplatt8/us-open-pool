@@ -67,7 +67,7 @@ export function App() {
                       team={team}
                       position={positions[i]}
                       t={standings.tournament}
-                      leaderTotal={standings.teams[0]?.total ?? null}
+                      leaderToPar={standings.teams[0]?.toPar ?? null}
                     />
                   ))}
                 </Accordion>

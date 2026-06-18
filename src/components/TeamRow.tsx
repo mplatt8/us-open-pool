@@ -154,9 +154,9 @@ function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
   )
 }
 
-export function TeamRow({ team, position, t, leaderTotal }: { team: TeamResult; position: Position; t: Tournament; leaderTotal: number | null }) {
+export function TeamRow({ team, position, t, leaderToPar }: { team: TeamResult; position: Position; t: Tournament; leaderToPar: number | null }) {
   const medal = position.medalRank != null
-  const gap = team.total != null && leaderTotal != null ? team.total - leaderTotal : null
+  const gap = team.toPar != null && leaderToPar != null ? team.toPar - leaderToPar : null
 
   return (
     <Accordion.Item value={team.owner} style={{ border: 'none', marginBottom: 10 }}>

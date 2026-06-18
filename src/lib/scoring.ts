@@ -219,9 +219,11 @@ export function formatToPar(n: number | null): string {
 }
 
 // Full ordering key: best-4 total, then 5th-lowest, then 6th-lowest.
-// Lower is better; missing values sort last.
+// Rank by team score relative to par (fairer than raw strokes while rounds are
+// in progress; identical ordering once rounds complete). Ties break on the
+// 5th- then 6th-lowest golfer. Lower is better; missing values sort last.
 function rankKey(t: TeamResult): number[] {
-  return [t.total ?? Infinity, ...t.tiebreak]
+  return [t.toPar ?? Infinity, ...t.tiebreak]
 }
 
 function compareKeys(a: number[], b: number[]): number {
