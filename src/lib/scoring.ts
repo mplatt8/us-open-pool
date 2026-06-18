@@ -1,3 +1,4 @@
+import { TOTAL_PAR } from './course'
 import type { EspnCompetitor, EspnLinescore, EspnScoreboard } from './espn'
 import type {
   HoleScore,
@@ -123,6 +124,7 @@ function scorePlayer(
       roundsDisplay: started ? ['85', '85', '85', '85'] : [DASH, DASH, DASH, DASH],
       roundDetails: [0, 1, 2, 3].map(() => ({ teeTime: null, holes: [] })),
       toPar: '-',
+      scoreToPar: started ? MISSED_CUT_PENALTY * 4 - 4 * TOTAL_PAR : null,
       total: started ? MISSED_CUT_PENALTY * 4 : null,
       status: 'notfound',
       holesThru: 0,
@@ -138,25 +140,29 @@ function scorePlayer(
   const thru = t.period >= 1 ? holesPlayed(comp.linescores?.[t.period - 1]) : 0
 
   if (t.state === 'pre') {
-    return { id, name, rounds, roundsDisplay: [DASH, DASH, DASH, DASH], roundDetails, toPar, total: null, status: 'pre', holesThru: thru, position }
+    return { id, name, rounds, roundsDisplay: [DASH, DASH, DASH, DASH], roundDetails, toPar, scoreToPar: null, total: null, status: 'pre', holesThru: thru, position }
   }
 
   const madeCut = t.cutInEffect && r1 != null && r2 != null && t.cutLine != null && r1 + r2 <= t.cutLine
   const missedCut = t.cutInEffect && !madeCut
   const status: PlayerStatus = !t.cutInEffect ? 'active' : missedCut ? 'cut' : 'made'
 
-  // Walk the four rounds once, building both the running total and what each
-  // round contributes for display. A round with no posted score counts as the
-  // 85 penalty when the player is cut (R3/R4) or when that round is already
-  // over (a withdrawal); otherwise it simply hasn't been played yet.
+  // Walk the four rounds once, building the running total, what each round
+  // contributes for display, and the par baseline for those same rounds (so
+  // we can show the total relative to par). A round with no posted score
+  // counts as the 85 penalty when the player is cut (R3/R4) or when that round
+  // is already over (a withdrawal); otherwise it simply hasn't been played yet.
   const roundsDisplay: string[] = []
   let total = 0
+  let parBaseline = 0
   let counted = 0
   for (let idx = 0; idx < 4; idx++) {
     const v = rounds[idx]
     const roundNum = idx + 1
     if (v != null) {
       total += v
+      const holePar = roundDetails[idx].holes.reduce((a, h) => a + h.par, 0)
+      parBaseline += holePar > 0 ? holePar : TOTAL_PAR
       roundsDisplay.push(String(v))
       counted++
       continue
@@ -164,6 +170,7 @@ function scorePlayer(
     const roundOver = roundNum < t.period || (roundNum === t.period && t.state === 'post')
     if ((missedCut && roundNum >= 3) || roundOver) {
       total += MISSED_CUT_PENALTY
+      parBaseline += TOTAL_PAR // a missed/penalty day is scored against par 70
       roundsDisplay.push(String(MISSED_CUT_PENALTY))
       counted++
     } else {
@@ -171,10 +178,27 @@ function scorePlayer(
     }
   }
 
-  return { id, name, rounds, roundsDisplay, roundDetails, toPar, total: counted > 0 ? total : null, status, holesThru: thru, position }
+  return {
+    id,
+    name,
+    rounds,
+    roundsDisplay,
+    roundDetails,
+    toPar,
+    scoreToPar: counted > 0 ? total - parBaseline : null,
+    total: counted > 0 ? total : null,
+    status,
+    holesThru: thru,
+    position,
+  }
 }
 
-function pickCounting(players: PlayerScore[]): { ids: Set<string>; total: number | null; tiebreak: number[] } {
+function pickCounting(players: PlayerScore[]): {
+  ids: Set<string>
+  total: number | null
+  toPar: number | null
+  tiebreak: number[]
+} {
   const scored = players.filter((p) => p.total != null).sort((a, b) => a.total! - b.total!)
   const counting = scored.slice(0, COUNTING_PLAYERS)
   // Tiebreaker: the next lowest scores after the counting four (5th, then 6th).
@@ -182,8 +206,16 @@ function pickCounting(players: PlayerScore[]): { ids: Set<string>; total: number
   return {
     ids: new Set(counting.map((p) => p.id)),
     total: counting.length ? counting.reduce((a, p) => a + p.total!, 0) : null,
+    toPar: counting.length ? counting.reduce((a, p) => a + (p.scoreToPar ?? 0), 0) : null,
     tiebreak: [rest[0] ?? Infinity, rest[1] ?? Infinity],
   }
+}
+
+// Format a relative-to-par number the golf way: E, +5, -3.
+export function formatToPar(n: number | null): string {
+  if (n == null) return '—'
+  if (n === 0) return 'E'
+  return n > 0 ? `+${n}` : `${n}`
 }
 
 // Full ordering key: best-4 total, then 5th-lowest, then 6th-lowest.
@@ -208,8 +240,8 @@ export function computeStandings(teamsFile: TeamsFile, board: EspnScoreboard): S
 
   const teams: TeamResult[] = teamsFile.teams.map((team) => {
     const players = team.players.map((p) => scorePlayer(p.id, p.name, byId.get(p.id), tournament))
-    const { ids, total, tiebreak } = pickCounting(players)
-    return { owner: team.owner, players, countingIds: ids, total, tiebreak }
+    const { ids, total, toPar, tiebreak } = pickCounting(players)
+    return { owner: team.owner, players, countingIds: ids, total, toPar, tiebreak }
   })
 
   teams.sort((a, b) => compareKeys(rankKey(a), rankKey(b)))

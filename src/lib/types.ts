@@ -35,6 +35,7 @@ export interface PlayerScore {
   roundsDisplay: string[] // 4 rounds, what each contributes: strokes, "85", or "—"
   roundDetails: RoundDetail[] // 4 rounds of tee time + hole-by-hole data
   toPar: string // ESPN relative-to-par string, e.g. "-3", "E", "+5"
+  scoreToPar: number | null // total strokes relative to par for everything counted
   total: number | null // total strokes incl. missed-cut penalties; null before they start
   status: PlayerStatus
   holesThru: number // holes completed in the current round
@@ -45,7 +46,8 @@ export interface TeamResult {
   owner: string
   players: PlayerScore[]
   countingIds: Set<string> // the (up to) 4 players whose strokes count
-  total: number | null // sum of the best 4
+  total: number | null // sum of the best 4 (strokes)
+  toPar: number | null // sum of the best 4 relative to par
   tiebreak: number[] // [5th-lowest, 6th-lowest] strokes; Infinity if absent
 }
 

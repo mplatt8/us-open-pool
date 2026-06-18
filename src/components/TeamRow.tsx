@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react'
 import { Accordion, Badge, Box, Group, Stack, Table, Text, UnstyledButton } from '@mantine/core'
 import { IconCheck } from '@tabler/icons-react'
-import type { Position } from '../lib/scoring'
+import { formatToPar, type Position } from '../lib/scoring'
 import type { PlayerScore, TeamResult, Tournament } from '../lib/types'
 import { Scorecard } from './Scorecard'
 
@@ -197,8 +197,11 @@ export function TeamRow({ team, position, t, leaderTotal }: { team: TeamResult; 
               <Text size="sm" c="dimmed">+{gap}</Text>
             )}
             <Stack gap={0} align="flex-end">
-              <Text fw={800} size="xl" c="#0a3161">{team.total ?? '—'}</Text>
-              <Text size="xs" c="dimmed">strokes</Text>
+              <Group gap={5} align="baseline" wrap="nowrap">
+                <Text fw={800} size="xl" c="#0a3161">{formatToPar(team.toPar)}</Text>
+                {team.total != null && <Text size="sm" c="dimmed">({team.total})</Text>}
+              </Group>
+              <Text size="xs" c="dimmed">to par (strokes)</Text>
             </Stack>
           </Group>
         </Group>
