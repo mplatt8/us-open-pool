@@ -147,22 +147,27 @@ function scorePlayer(
   const missedCut = t.cutInEffect && !madeCut
   const status: PlayerStatus = !t.cutInEffect ? 'active' : missedCut ? 'cut' : 'made'
 
-  // Walk the four rounds once, building the running total, what each round
-  // contributes for display, and the par baseline for those same rounds (so
-  // we can show the total relative to par). A round with no posted score
-  // counts as the 85 penalty when the player is cut (R3/R4) or when that round
-  // is already over (a withdrawal); otherwise it simply hasn't been played yet.
+  // Walk the four rounds once, building the running stroke total and what each
+  // round contributes for display. A round with no posted score counts as the
+  // 85 penalty when the player is cut (R3/R4) or when that round is already
+  // over (a withdrawal); otherwise it simply hasn't been played yet.
+  //
+  // For relative-to-par we trust ESPN's own `score` rather than summing the
+  // holes ourselves: it's the authoritative figure and correctly absorbs
+  // penalty strokes (e.g. a club-throw) that don't belong to any single hole,
+  // which hole-by-hole math would silently drop. On top of it we add only the
+  // pool's own scoring: each missed/penalty day is +15 (the 85 penalty against
+  // a par-70 day).
+  const PENALTY_TO_PAR = MISSED_CUT_PENALTY - TOTAL_PAR // 85 strokes vs par 70 = +15
   const roundsDisplay: string[] = []
   let total = 0
-  let parBaseline = 0
+  let penaltyToPar = 0
   let counted = 0
   for (let idx = 0; idx < 4; idx++) {
     const v = rounds[idx]
     const roundNum = idx + 1
     if (v != null) {
       total += v
-      const holePar = roundDetails[idx].holes.reduce((a, h) => a + h.par, 0)
-      parBaseline += holePar > 0 ? holePar : TOTAL_PAR
       roundsDisplay.push(String(v))
       counted++
       continue
@@ -170,7 +175,7 @@ function scorePlayer(
     const roundOver = roundNum < t.period || (roundNum === t.period && t.state === 'post')
     if ((missedCut && roundNum >= 3) || roundOver) {
       total += MISSED_CUT_PENALTY
-      parBaseline += TOTAL_PAR // a missed/penalty day is scored against par 70
+      penaltyToPar += PENALTY_TO_PAR
       roundsDisplay.push(String(MISSED_CUT_PENALTY))
       counted++
     } else {
@@ -185,7 +190,7 @@ function scorePlayer(
     roundsDisplay,
     roundDetails,
     toPar,
-    scoreToPar: counted > 0 ? total - parBaseline : null,
+    scoreToPar: counted > 0 ? parseRel(toPar) + penaltyToPar : null,
     total: counted > 0 ? total : null,
     status,
     holesThru: thru,
