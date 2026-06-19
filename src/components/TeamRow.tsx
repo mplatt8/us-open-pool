@@ -71,8 +71,11 @@ function RoundCell({
 
 function PlayerTable({ team, t }: { team: TeamResult; t: Tournament }) {
   const [openKey, setOpenKey] = useState<string | null>(null)
-  // Show counting players first, then the rest, each in ascending strokes.
-  const sorted = [...team.players].sort((a, b) => (a.total ?? Infinity) - (b.total ?? Infinity))
+  // Rank by relative-to-par — the same key used to pick the counting four — so
+  // the four check-marked golfers are always the top four rows, in order.
+  const sorted = [...team.players].sort(
+    (a, b) => (a.scoreToPar ?? Infinity) - (b.scoreToPar ?? Infinity),
+  )
 
   return (
     <Table.ScrollContainer minWidth={460} type="native">
