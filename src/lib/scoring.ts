@@ -199,14 +199,18 @@ function pickCounting(players: PlayerScore[]): {
   toPar: number | null
   tiebreak: number[]
 } {
-  const scored = players.filter((p) => p.total != null).sort((a, b) => a.total! - b.total!)
+  // Pick the counting four by relative-to-par (fairer than raw strokes while
+  // rounds are in progress; converges to the same four once rounds complete).
+  const scored = players
+    .filter((p) => p.scoreToPar != null)
+    .sort((a, b) => a.scoreToPar! - b.scoreToPar!)
   const counting = scored.slice(0, COUNTING_PLAYERS)
-  // Tiebreaker: the next lowest scores after the counting four (5th, then 6th).
-  const rest = scored.slice(COUNTING_PLAYERS).map((p) => p.total!)
+  // Tiebreaker: the next lowest to-par scores after the counting four (5th, 6th).
+  const rest = scored.slice(COUNTING_PLAYERS).map((p) => p.scoreToPar!)
   return {
     ids: new Set(counting.map((p) => p.id)),
-    total: counting.length ? counting.reduce((a, p) => a + p.total!, 0) : null,
-    toPar: counting.length ? counting.reduce((a, p) => a + (p.scoreToPar ?? 0), 0) : null,
+    total: counting.length ? counting.reduce((a, p) => a + (p.total ?? 0), 0) : null,
+    toPar: counting.length ? counting.reduce((a, p) => a + p.scoreToPar!, 0) : null,
     tiebreak: [rest[0] ?? Infinity, rest[1] ?? Infinity],
   }
 }
